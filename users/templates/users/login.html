@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <div class="content-section">
+
+        <form method="POST">
+            {% csrf_token %}
+            <fieldset class="from-group">
+                <legend class="border-bottom mb-4">Log In</legend>
+                {{ form|crispy }}
+            </fieldset>
+            <div class="form-group">
+                <button class="btn btn-outline-info">Login</button>
+            </div>
+        </form>
+
+        <div ng-app="JWTApp">
+            <div ng-controller="LoginJWTCtrl as ctrl">
+                <div>
+                    <div class="google-btn">
+                        <div class="google-icon-wrapper">
+                            <img class="google-icon"
+                                 src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"/>
+                        </div>
+                        <p class="btn-text" ng-click="authenticate('google')"><b>Sign in with google</b></p>
+                        <div>
+                            <button ng-click="logout()">Logout jwt</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="border-top pt-3">
+            <small class="text-muted">
+                                Need An Account? <a class="ml-2" href="{% url 'register' %}">Sign Up</a>
+            </small>
+        </div>
+    </div>
+
+{% endblock content %}
+
+{% block scripts %}
+
+    {{ block.super }}
+    <script type="text/javascript">
+
+        function getCookie(name) {
+            let matches = document.cookie.match(new RegExp(
+                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+            ));
+            return matches ? decodeURIComponent(matches[1]) : undefined;
+        }
+
+        function setCookie(name, value, options = {}) {
+
+            options = {
+                path: '/',
+            };
+
+            if (options.expires instanceof Date) {
+                options.expires = options.expires.toUTCString();
+            }
+
+            let updatedCookie = encodeURIComponent(name) + "=" + encodeURIComponent(value);
+
+            for (let optionKey in options) {
+                updatedCookie += "; " + optionKey;
+                let optionValue = options[optionKey];
+                if (optionValue !== true) {
+                    updatedCookie += "=" + optionValue;
+                }
+            }
+
+            document.cookie = updatedCookie;
+        }
+
+        function deleteCookie(name) {
+            setCookie(name, "", {
+                'max-age': -1
+            })
+        }
+
+        function set_user(response) {
+            try {
+                console.log(response.data)
+                let token = response.data['token']
+                let refresh = response.data['refresh']
+                try {
+                    deleteCookie('token');
+                    deleteCookie('refresh');
+                } catch (e) {
+                    console.log(e)
+                }
+
+                setCookie('token', token, {secure: true, 'max-age': 86400});
+                setCookie('refresh', refresh, {secure: true, 'max-age': 86400});
+
+                console.log(document.cookie)
+
+                window.location.href =
+                    '../';
+            } catch (err) {
+                console.log('cannot read response')
+            }
+
+            var source;
+            if (response) {
+                source = response.data;
+            } else {
+                source = {
+                    'username': null,
+                    'first_name': null,
+                    'last_name': null,
+                    'email': null,
+                };
+            }
+            self.user.username = source.username;
+            self.user.first_name = source.first_name;
+            self.user.last_name = source.last_name;
+            self.user.email = source.email;
+
+        }
+
+        angular.module('JWTApp', ['satellizer'])
+            .config(function ($authProvider) {
+
+                $authProvider.google({
+                    url: "{% url 'login_social_jwt_pair_user' provider='google-oauth2' %}",
+                    clientId: '{{ googleoauth2_key }}',
+                    redirectUri: window.location.origin + '/'
+                });
+
+                $authProvider.authToken = 'JWT';
+                $authProvider.tokenPrefix = 'satellizer_simple_jwt';  // to not collide with regular token auth
+            }).controller('LoginJWTCtrl', function ($scope, $auth, $http) {
+            self = this;
+            self.user = {};
+            set_user();
+
+            self.jwtPayload = $auth.getPayload();
+
+            $scope.authenticate = function (provider) {
+                $auth.authenticate(provider).then(function (response) {
+                    console.log(response.data.token)
+                    $auth.setToken(response.data.token);
+                    set_user(response);
+                    self.jwtPayload = $auth.getPayload();
+                }).catch(function (data) {
+                    var err_msg = "Something went wrong";
+                    console.log(data)
+                    console.log(err_msg);
+                });
+            };
+
+            $scope.logout = function () {
+                $auth.removeToken();
+                set_user();
+                self.jwtPayload = $auth.getPayload();
+            };
+        });
+
+         window.onload = function () {
+             let token = getCookie('token')
+
+             try {
+                 if (token) {
+                     window.location.href = "{% url 'books_main' %}";
+                 }
+              } catch (e) {
+
+                 console.log(e)
+              }
+          }
+
+    </script>
+{% endblock %}

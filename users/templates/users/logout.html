@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <h2>You have been logged out</h2>
+    <div class="border-top pt-3">
+        <small class="text-muted">
+            Have a nice day and<a class="ml-2" href="{% url 'login' %}">Log In Again</a>
+        </small>
+    </div>
+{% endblock content %}
+{% block scripts %}
+    <script type="text/javascript">
+        function set_user(response) {
+
+            var source = {
+                'username': null,
+                'first_name': null,
+                'last_name': null,
+                'email': null,
+            };
+
+            self.user.username = source.username;
+            self.user.first_name = source.first_name;
+            self.user.last_name = source.last_name;
+            self.user.email = source.email;
+        };
+
+        angular.module('JWTApp', ['satellizer'])
+            .config(function ($authProvider) {
+                $authProvider.google({
+                    url: "{% url 'login_social_jwt_pair_user' provider='google-oauth2' %}",
+                    clientId: '{{ googleoauth2_key }}',
+                    redirectUri: window.location.origin + '/'
+                });
+                $authProvider.authToken = 'JWT';
+                $authProvider.tokenPrefix = 'satellizer_simple_jwt';  // to not collide with regular token auth
+            }).controller('LoginJWTCtrl', function ($scope, $auth, $http) {
+            self = this;
+
+            self.user = {};
+            set_user();
+            if ($auth.getToken()) {
+                $http.get('{% url "current_user_jwt" %}').then(function (response) {
+                    set_user(response);
+                });
+            }
+
+            self.jwtPayload = $auth.getPayload();
+
+            $scope.authenticate = function (provider) {
+                $auth.authenticate(provider).then(function (response) {
+
+                    $auth.removeToken();
+                    set_user();
+                    self.jwtPayload = $auth.getPayload();
+
+                    $auth.setToken(response.data.token);
+                    set_user(response);
+                    self.jwtPayload = $auth.getPayload();
+                }).catch(function (data) {
+                    var err_msg = "Something went wrong, maybe you haven't installed 'django-rest-framework-simplejwt'?";
+                    console.log(data)
+                    console.log(err_msg);
+                    {#alert(err_msg);#}
+                });
+            };
+
+            function logout() {
+                $auth.removeToken();
+                set_user();
+                self.jwtPayload = $auth.getPayload();
+            };
+        });
+
+
+    </script>
+{% endblock scripts %}
