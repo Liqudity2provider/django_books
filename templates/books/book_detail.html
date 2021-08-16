@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load custom_temp_tags %}
+{% block content %}
+    {% if user.is_authenticated %}
+        <a class="btn btn-outline-secondary mt-1 mb-1" href="{% url 'review_create' book.id %}">Add review to this
+            book</a>
+        {% if user|has_group:"moderator" or user.is_superuser %}
+            <a class="btn btn-danger mt-1 mb-1" href="{% url 'book_delete' book.id %}">Delete this book</a>
+        {% endif %}
+    {% endif %}
+
+    <div class="article-metadata">
+        <a class="mr-2" href="#">{{ book.author }}</a>
+    </div>
+
+    <h2 class="article-title">{{ book.name }}</h2>
+    {#    {% if reviews|length > 0 %}#}
+    <h3 class="mr-4 article-title">Reviews of the book:</h3>
+
+    <article class="media content-section">
+        <div class="media-body">
+            {% for review in book.reviews %}
+                <div class="article-metadata">
+                    <a class="mr-2" href="#">{{ review.review_author }}</a>
+                </div>
+                <h2 class="article-title"><a class="mr-2"
+                                             href="{% url 'review_detail' review.id %}">{{ review.title }}</a></h2>
+            {% endfor %}
+        </div>
+    </article>
+    {#        {% endif %}#}
+{% endblock content %}

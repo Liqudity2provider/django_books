@@ -1,0 +1,90 @@
+{% extends "books/base.html" %}
+
+{% block content %}
+
+    <li>
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <h3 class="card-title">{{ review.title }}</h3>
+
+                <p class="card-text">{{ review.content }}</p>
+            </div>
+        </div>
+    </li>
+
+    <div class="col-md-7">
+
+    <h2>
+        {{ comments|length }} comment(s)
+    </h2>
+
+    {% load mptt_tags %}
+
+    <div>
+        {% recursetree comments %}
+            <div id="{{ node.id }}" class="my-2 p-2" style="border: 1px solid grey">
+                <div class="d-flex justify-content-between">By {{ node.author }}
+                    <div></div>
+                    {{ node.publish }}
+                </div>
+                <div>{{ node.content }}</div>
+                <hr/>
+                {% if node.level < 3 %}
+                    {% if user.is_authenticated %}
+
+                        <button class="button" onclick="myFunction({{ node.id }})">Reply</button>
+                    {% endif %}
+                {% endif %}
+
+            </div>
+
+            {% if not node.is_leaf_node %}
+                <div class="children pl-2 pl-md-5">
+                    {{ children }}
+                </div>
+            {% endif %}
+
+        {% endrecursetree %}
+    </div>
+
+    {% if user.is_authenticated %}
+        <div id="myDIV" style="display:block;">
+            <form id="myForm" method="post">
+                <h2>Create new comment</h2>
+                {{ comment_form.as_p }}
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-lg btn-block">Submit</button>
+            </form>
+        </div>
+    {% endif %}
+
+    <script>
+        function formExit() {
+            document.getElementById("newForm").remove();
+        }
+
+        function myFunction(id) {
+            if (document.contains(document.getElementById("newForm"))) {
+                document.getElementById("newForm").remove();
+            }
+
+            var d1 = document.getElementById(id);
+
+            d1.insertAdjacentHTML('afterend',
+                '<form id="newForm" class="form-insert py-2" method="post"> \
+                          <div class="d-flex justify-content-between"><h2>Reply:</h2>\
+                          <div><button type="button" class="btn btn-outline-secondary" onclick="formExit()"">Close</button></div></div> \
+                          <select name="parent" class="d-none" id="id_parentt"> \
+                          <option value="' + id + '" selected="' + id + '"></option> \
+                </select> \
+                <label for="id_content">Content:</label> \
+                <textarea name="content" cols="40" rows="5" class="form-control" required id="id_content"></textarea> \
+                {% csrf_token %} \
+                <button type="submit" class="btn btn-primary btn-lg btn-block">Submit</button> \
+              </form>');
+        }
+
+        $('#myForm').trigger("reset");
+    </script>
+
+{% endblock content %}

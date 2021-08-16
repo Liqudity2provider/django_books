@@ -9,10 +9,14 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+import os
 from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+from books import templatetags
+from books.templatetags import custom_temp_tags
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 URL_PATH = 'http://127.0.0.1:8000/'
 # Quick-start development settings - unsuitable for production
@@ -46,7 +50,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'social_django',
     'rest_social_auth',
-
+    'templatetags',
     # for mptt comments
     'mptt',
 
@@ -153,7 +157,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = os.path.join(BASE_DIR, "/static/")
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

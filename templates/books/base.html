@@ -1,27 +1,23 @@
-{% load static %}
 <!DOCTYPE html>
+
+{% load mptt_tags %}
+
 <html lang="en">
 <head>
 
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    {#    <meta name="google-signin-client_id" content="132715411999-k6s2b050id792h6o0lft3db2str3buka.apps.googleusercontent.com">#}
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-    <!--    <link rel="stylesheet" type="text/css" href="{% static 'blog/main.css' %}">-->
     <style>
-
-        @import url(https://fonts.googleapis.com/css?family=Roboto:500);
-
         body {
             background: #fafafa;
             color: #333333;
             margin-top: 5rem;
-            font-family: Arial, monospace;
         }
 
         h1, h2, h3, h4, h5, h6 {
@@ -54,6 +50,7 @@
             border: 1px solid #dddddd;
             border-radius: 3px;
             margin-bottom: 20px;
+            width: 135%;
         }
 
         .article-title {
@@ -107,60 +104,19 @@
             color: #5e1a13;
         }
 
-        .google-btn {
-            width: 184px;
-            height: 42px;
-            background-color: #4285f4;
-            border-radius: 2px;
-            box-shadow: 0 3px 4px 0 rgba(0, 0, 0, .25);
+        img {
+            width: 250px;
         }
 
-        .google-icon-wrapper {
-            position: absolute;
-            margin-top: 1px;
-            margin-left: 1px;
-            width: 40px;
-            height: 40px;
-            border-radius: 2px;
-            background-color: white;
+        li {
+            display: inline-block;
         }
-
-        .google-icon {
-            position: absolute;
-            margin-top: 11px;
-            margin-left: 11px;
-            width: 18px;
-            height: 18px;
-            background-color: white;
-        }
-
-        .btn-text {
-            float: right;
-            margin: 11px 11px 0 0;
-            color: #fff;
-            font-size: 14px;
-            letter-spacing: 0.2px;
-            font-family: "Roboto", serif;
-        }
-
-        .google-btn:hover {
-            box-shadow: 0 0 6px #4285f4;
-        }
-
-
-        .google-btn:active {
-            background: #1669F2;
-        }
-
 
     </style>
-    {% if title %}
-        <title>Django Blog - {{ title }}</title>
-    {% else %}
-        <title>Django Blog</title>
-    {% endif %}
+
 </head>
 <body>
+
 <header class="site-header">
     <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
         <div class="container">
@@ -174,6 +130,7 @@
                     <a class="nav-item nav-link" href="{% url 'books_main' %}">Home</a>
                     <a class="nav-item nav-link" href="{% url 'book_search' %}">Search books</a>
                     <a class="nav-item nav-link" href="{% url 'author_search' %}">Search authors</a>
+
                 </div>
                 <!-- Navbar Right Side -->
                 <div id="not auth" class="navbar-nav">
@@ -188,6 +145,7 @@
         </div>
     </nav>
 </header>
+
 <main role="main" class="container">
     <div class="row">
         <div class="col-md-8">
@@ -198,27 +156,14 @@
             {% endif %}
             {% block content %}{% endblock %}
         </div>
-        <div class="col-md-4">
-            <div class="content-section">
-                <h3>Our Sidebar</h3>
-                <p class='text-muted'>Join our new options
-                <ul class="list-group">
-                {% if user.is_authenticated %}
-                    <li class="list-group-item list-group-item-light"><a href="{% url 'book_create' %}">Add new book</a>
-                    </li>
-                {% endif %}
-                    <li class="list-group-item list-group-item-light">Later</li>
-                    <li class="list-group-item list-group-item-light">Later</li>
-                    <li class="list-group-item list-group-item-light">Later</li>
-                </ul>
-                </p>
-            </div>
-        </div>
     </div>
 </main>
 
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<link rel="stylesheet" href="//code.jquery.com/ui/1.10.1/themes/smoothness/jquery-ui.min.css">
+<script src="//code.jquery.com/jquery-1.10.1.min.js"></script>
+
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
         integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
         crossorigin="anonymous"></script>

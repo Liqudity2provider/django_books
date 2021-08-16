@@ -88,11 +88,19 @@ class LoginView(APIView):
         user = authenticate(username=request.data['username'], password=request.data['password'])
         if user:
             pair_tokens = get_tokens_for_user(user)  # creating tokens for user authentication
+            api_response = requests.get(
+                PATH + 'books/api/',
+                headers=self.headers,
+                data=request.data
+            )
+
+            output = api_response.json()
 
             result = Response(
                 template_name='home.html',
                 headers=headers,
                 data={
+                    "books": api_response.json(),
                     "user": user,
                 }
             )

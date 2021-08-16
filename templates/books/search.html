@@ -1,0 +1,37 @@
+{% extends "books/base.html" %}
+{% load static %}
+{% block content %}
+    <h3>Books</h3>
+
+    <div class="row">
+
+        {# icon and search-box #}
+        <div class="col-md-8"></div>
+        <div class="col-md-8">
+
+            <div class="form-group ">
+                <input type="text" class="form-control" id='searchField' placeholder="Search">
+            </div>
+        </div>
+    </div>
+
+    <div id="replaceable-content" class="table-output">
+        <table class="table table-stripped table-hover">
+            <thead>
+            <tr>
+                <th>Name</th>
+            </tr>
+            </thead>
+            <tbody class="t-body-output">
+
+            </tbody>
+        </table>
+
+    </div>
+    <p id="when-no-films" class="when-no-films">No books found.</p>
+
+
+    </div>
+    <script type="text/javascript" src="{% static 'javascript\main.js' %}"></script>
+
+{% endblock content%}
