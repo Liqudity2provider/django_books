@@ -51,6 +51,10 @@ INSTALLED_APPS = [
     'social_django',
     'rest_social_auth',
     'templatetags',
+
+    # debug_toolbar
+    'debug_toolbar',
+
     # for mptt comments
     'mptt',
 
@@ -64,6 +68,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+
+]
+INTERNAL_IPS = [
+    '127.0.0.1',
 ]
 
 ROOT_URLCONF = 'django_books.urls'
@@ -102,7 +111,6 @@ WSGI_APPLICATION = 'django_books.wsgi.application'
 #     }
 # }
 
-# ToDo remove credentials
 DATABASES = {
 
     'default': {

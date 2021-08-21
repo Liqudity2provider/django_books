@@ -18,19 +18,22 @@ PATH = settings.URL_PATH
 
 class BooksMainPage(APIView):
 
-    def get(self, request, **kwargs):
+    def get(self, request, *args, **kwargs):
         """:return Books"""
 
         token = refresh_token_or_redirect(request)
+        page = self.request.query_params.get('page')
 
         api_response = requests.get(
             PATH + 'books/api/',
             headers=self.headers,
-            data=request.data
+            data=request.data,
+            params={
+                'page': page
+            }
         )
 
         output = api_response.json()
-
         context = {
             'books': output,
             'user': user_from_token(token),
@@ -97,10 +100,11 @@ class ReviewDetailView(APIView):
         token = refresh_token_or_redirect(request)
 
         review = Review.objects.get(pk=pk)
+        comments = review.comments.select_related()
 
         context = {
             'review': review,
-            'comments': review.comments.all(),
+            'comments': comments,
             'comment_form': NewCommentForm(),
             'user': user_from_token(token),
         }

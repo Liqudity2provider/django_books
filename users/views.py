@@ -91,7 +91,10 @@ class LoginView(APIView):
             api_response = requests.get(
                 PATH + 'books/api/',
                 headers=self.headers,
-                data=request.data
+                data=request.data,
+                params={
+                    "page": 1
+                }
             )
 
             output = api_response.json()
