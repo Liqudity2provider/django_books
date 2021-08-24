@@ -6,9 +6,8 @@ from mptt.models import MPTTModel, TreeForeignKey
 class Author(models.Model):
     name = models.CharField(max_length=40)
 
-    def __repr__(self):
+    def __str__(self):
         return self.name
-
 
 
 class Book(models.Model):

@@ -13,7 +13,7 @@ class BookApiListView(generics.ListCreateAPIView):
     """
 
     serializer_class = BookSerializer
-    number_of_obj_per_page = 2
+    number_of_obj_per_page = 5
 
     def get_queryset(self):
         queryset = Book.objects.annotate(count_of_reviews=Count('reviews')).order_by('-count_of_reviews')
