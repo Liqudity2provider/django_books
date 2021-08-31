@@ -32,7 +32,7 @@ urlpatterns = [
     path('register/', user_views.UserRegister.as_view(), name='register'),
     path('logout/', user_views.LogoutView.as_view(), name='logout'),
 
-    path(r'^api/user/jwt/', user_views.UserJWTDetailView.as_view(), name="current_user_jwt"),
+    path('api/user/jwt/', user_views.UserJWTDetailView.as_view(), name="current_user_jwt"),
 
     path('admin/', admin.site.urls),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

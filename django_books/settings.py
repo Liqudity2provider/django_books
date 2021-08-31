@@ -70,6 +70,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 
+    # custom
+    'users.middleware.auth.JwtAuthorization',
+
 ]
 INTERNAL_IPS = [
     '127.0.0.1',
@@ -86,13 +89,17 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.request',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.i18n',
                 'django.template.context_processors.media',
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
+
+                # custom
                 'users.context_processors.social_app_keys',
+                'users.context_processors.hand_over_user'
             ],
         },
     },
@@ -175,8 +182,9 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=360),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=2),
     'AUTH_TOKEN_CLASSES': (
         'rest_framework_simplejwt.tokens.AccessToken',
         'rest_framework_simplejwt.tokens.SlidingToken',
@@ -186,13 +194,15 @@ SOCIAL_AUTH_FACEBOOK_KEY = '295137440610143'
 SOCIAL_AUTH_FACEBOOK_SECRET = '4b4aef291799a7b9aaf016689339e97f'
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', ]
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
-    'fields': ','.join([
-        # public_profile
-        'id', 'cover', 'name', 'first_name', 'last_name', 'age_range', 'link',
-        'gender', 'locale', 'picture', 'timezone', 'updated_time', 'verified',
-        # extra fields
-        'email',
-    ]),
+    'fields': ','.join(
+        [
+            # public_profile
+            'id', 'cover', 'name', 'first_name', 'last_name', 'age_range', 'link',
+            'gender', 'locale', 'picture', 'timezone', 'updated_time', 'verified',
+            # extra fields
+            'email',
+        ]
+    ),
 }
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = (
@@ -203,7 +213,6 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email', ]
 
 SOCIAL_AUTH_TWITTER_KEY = 'gCrpEpNxpWkAE6Cul98OzAWTk'
 SOCIAL_AUTH_TWITTER_SECRET = '7SYSRpYY4amW5kiNXUAxUDdWS7G3nHytRIGHbDVTByzBfsqDJl'
-
 
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.facebook.FacebookOAuth2',
@@ -261,6 +270,10 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
 
     ],
-    'TEST_REQUEST_DEFAULT_FORMAT': 'json'
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+
+    # pagination classes
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    # 'PAGE_SIZE': 5
 
 }

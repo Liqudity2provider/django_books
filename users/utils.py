@@ -65,6 +65,7 @@ def check_expiration(token, refresh):
     """
     decoded_token = jwt.decode(token, options={"verify_signature": False})
     if decoded_token.get('exp') > time.time():
+        # if token not expired
         return None
     decoded_refresh = jwt.decode(refresh, options={"verify_signature": False})
     if decoded_refresh.get('exp') > time.time():
@@ -91,24 +92,24 @@ def refresh_token_or_redirect(request):
     """
     Get token from COOKIE
     Checking expiration using method 'check_expiration'
-
     """
+
     token = request.COOKIES.get('token')
     refresh = request.COOKIES.get('refresh')
     try:
         validation_result = check_expiration(token, refresh)
 
-        if validation_result:
-            token = validation_result.get('token')
-            error = validation_result.get('error')
-            if token:
-                str(token)
-            elif error:
-                messages.error(request, 'Your token has been expired. Please login again.')
-                return {
-                    'error': 'token has been expired'
-                }
-        return token
+        if not validation_result:
+            # if token not expired
+            return token
+        elif 'token' in validation_result.keys():
+            # if token refreshed
+            return str(token)
+        else:
+            messages.error(request, 'Your token has been expired. Please login again.')
+            return {
+                'error': 'token has been expired'
+            }
     except:
         messages.error(request, 'Your token has been expired. Please login again.')
         return {

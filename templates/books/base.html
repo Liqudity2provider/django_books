@@ -138,7 +138,7 @@
                 </div>
 
                 <div id="auth" class="navbar-nav">
-                    <a class="nav-item nav-link" href="">Your logged in as {{ user }}</a>
+                    <a class="nav-item nav-link" href="">Your logged in as {{ jwt_user }}</a>
                     <a class="nav-item nav-link" onclick="myScript" href="{% url 'logout' %}">Logout</a>
                 </div>
             </div>

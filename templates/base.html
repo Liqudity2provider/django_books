@@ -181,7 +181,7 @@
                 </div>
 
                 <div id="auth" class="navbar-nav">
-                    <a class="nav-item nav-link" href="">Your logged in as {{ user }}</a>
+                    <a class="nav-item nav-link" href="">Your logged in as {{ jwt_user }}</a>
                     <a class="nav-item nav-link" onclick="myScript" href="{% url 'logout' %}">Logout</a>
                 </div>
             </div>
@@ -203,7 +203,7 @@
                 <h3>Our Sidebar</h3>
                 <p class='text-muted'>Join our new options
                 <ul class="list-group">
-                {% if user.is_authenticated %}
+                {% if jwt_user.is_authenticated %}
                     <li class="list-group-item list-group-item-light"><a href="{% url 'book_create' %}">Add new book</a>
                     </li>
                 {% endif %}

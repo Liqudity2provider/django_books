@@ -9,6 +9,9 @@ class Author(models.Model):
     def __str__(self):
         return self.name
 
+    def __repr__(self):
+        return f"Author '{self.name}', id-'{self.pk}'"
+
 
 class Book(models.Model):
     name = models.CharField(max_length=80)
@@ -18,7 +21,7 @@ class Book(models.Model):
     )
 
     def __repr__(self):
-        return self.name
+        return f"Book '{self.name}', author-'{self.author}'"
 
     def __str__(self):
         return self.name
@@ -41,7 +44,7 @@ class Review(models.Model):
         return self.title
 
     def __repr__(self):
-        return self.title
+        return f"Review with title '{self.title}', author - '{self.review_author}', book - '{self.book}',"
 
 
 class Comment(MPTTModel):
@@ -61,3 +64,6 @@ class Comment(MPTTModel):
 
     def __str__(self):
         return self.content
+
+    def __repr__(self):
+        return f"Comment with content '{self.content}', author - '{self.author}', review - '{self.review}',"

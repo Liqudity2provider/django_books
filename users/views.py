@@ -1,5 +1,6 @@
 import json
 import requests
+from django.shortcuts import redirect
 from django.views.generic.detail import BaseDetailView
 from rest_framework.renderers import TemplateHTMLRenderer
 from django.contrib.auth import authenticate, login
@@ -35,7 +36,7 @@ class UserRegister(generics.CreateAPIView):
             template_name='users/register.html', data={
                 "form": UserRegisterForm,
             }
-            )
+        )
 
     def post(self, request, *args, **kwargs):
         form_data = {
@@ -57,14 +58,13 @@ class UserRegister(generics.CreateAPIView):
                     "form": UserRegisterForm(),
                     "messages": [*output.get('errors')]
                 }
-                )
+            )
 
         return Response(
             template_name='users/login.html', data={
                 "form": UserRegisterForm(),
-                "messages": output.get('errors')
             }
-            )
+        )
 
 
 class LoginView(APIView):
@@ -82,42 +82,30 @@ class LoginView(APIView):
             template_name='users/login.html', data={
                 "form": UserLoginForm
             }
-            )
+        )
 
     def post(self, request, *args, **kwargs):
         user = authenticate(username=request.data['username'], password=request.data['password'])
-        if user:
-            pair_tokens = get_tokens_for_user(user)  # creating tokens for user authentication
-            api_response = requests.get(
-                PATH + 'books/api/',
-                headers=self.headers,
-                data=request.data,
-                params={
-                    "page": 1
-                }
-            )
 
-            output = api_response.json()
-
-            result = Response(
-                template_name='home.html',
-                headers=headers,
-                data={
-                    "books": api_response.json(),
-                    "user": user,
-                }
-            )
-            result.set_cookie("refresh", pair_tokens["refresh"])
-            result.set_cookie("token", pair_tokens["token"])
-            return result
-
-        else:
+        if not user:
             messages.error(request, "Cannot find user with this email and password")
             return Response(
                 template_name='users/login.html', data={
                     "form": UserLoginForm
                 }
-                )
+            )
+
+        else:
+            pair_tokens = get_tokens_for_user(user)  # creating tokens for user authentication
+            requests.get(
+                PATH + 'books/api/',
+                headers=self.headers,
+                data=request.data,
+            )
+            response = redirect('books_main')
+            response.set_cookie('refresh', pair_tokens["refresh"])
+            response.set_cookie('token', pair_tokens["token"])
+            return response
 
 
 class LogoutView(APIView):
@@ -134,7 +122,8 @@ class LogoutView(APIView):
             template_name='users/logout.html',
             data={
                 'user': None
-            })
+            }
+        )
         response.delete_cookie('refresh')
         response.delete_cookie('token')
 
@@ -142,4 +131,5 @@ class LogoutView(APIView):
 
 
 class UserJWTDetailView(SimpleJWTAuthMixin, BaseDetailView):
+    """Used to send requests from js in templates"""
     pass

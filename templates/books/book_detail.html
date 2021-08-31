@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% load custom_temp_tags %}
 {% block content %}
-    {% if user.is_authenticated %}
+    {% if jwt_user.is_authenticated %}
         <a class="btn btn-outline-secondary mt-1 mb-1" href="{% url 'review_create' book.id %}">Add review to this
             book</a>
-        {% if user|has_group:"moderator" or user.is_superuser %}
+        {% if jwt_user|has_group:"moderator" or jwt_user.is_superuser %}
             <a class="btn btn-danger mt-1 mb-1" href="{% url 'book_delete' book.id %}">Delete this book</a>
         {% endif %}
     {% endif %}

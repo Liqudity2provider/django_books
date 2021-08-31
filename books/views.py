@@ -1,4 +1,8 @@
+import asyncio
+import concurrent.futures
 import json
+from itertools import islice
+
 from django.contrib import messages
 import requests
 from django.db.models import Count
@@ -21,56 +25,44 @@ class BooksMainPage(APIView):
     def get(self, request, *args, **kwargs):
         """:return Books"""
 
-        token = refresh_token_or_redirect(request)
-        page = self.request.query_params.get('page')
-
         api_response = requests.get(
             PATH + 'books/api/',
             headers=self.headers,
             data=request.data,
-            params={
-                'page': page
-            }
         )
-
         output = api_response.json()
+
         context = {
-            'books': output,
-            'user': user_from_token(token),
+            'books': output['results'],
         }
         return render(request, 'home.html', context)
-
-    def post(self, request, *args, **kwargs):
-        ...
 
 
 class BookSearchView(ListView):
     model = Book
 
     def get(self, request, **kwargs):
-        token = refresh_token_or_redirect(request)
-
-        return render(request, 'books/search.html', {'user': user_from_token(token)})
+        return render(request, 'books/search.html')
 
     def post(self, request):
         search_string = json.loads(request.body).get('searchText')
+
         books = Book.objects.annotate(count_of_reviews=Count('reviews')).order_by('-count_of_reviews').filter(
             name__icontains=search_string
-            )
+        )
+
         data = list(books.values())
-        res_data = []
+
         for book in data:
             book.update({'link': f'../book/{book.get("id")}/'})
-            res_data.append(book)
-        return JsonResponse(list(res_data), safe=False)
+
+        return JsonResponse(data, safe=False)
 
 
 class BookDetailView(APIView):
 
     def get(self, request, pk, **kwargs):
         """:return Book"""
-
-        token = refresh_token_or_redirect(request)
 
         api_response = requests.get(
             PATH + 'book/api/' + str(pk),
@@ -82,22 +74,14 @@ class BookDetailView(APIView):
 
         context = {
             'book': output,
-            'user': user_from_token(token),
         }
         return render(request, 'books/book_detail.html', context)
-
-    def post(self, request, pk):
-        """adds new review to Book"""
-        # ToDo write method
-        ...
 
 
 class ReviewDetailView(APIView):
 
     def get(self, request, pk, **kwargs):
         """:return Review"""
-
-        token = refresh_token_or_redirect(request)
 
         review = Review.objects.get(pk=pk)
         comments = review.comments.select_related()
@@ -106,21 +90,19 @@ class ReviewDetailView(APIView):
             'review': review,
             'comments': comments,
             'comment_form': NewCommentForm(),
-            'user': user_from_token(token),
         }
         return render(request, 'books/review_detail.html', context)
 
     def post(self, request, pk):
         """adds new comment to Review"""
 
-        token = refresh_token_or_redirect(request)
-
         review = Review.objects.get(pk=pk)
         comment_form = NewCommentForm(request.POST)
+
         if comment_form.is_valid():
             user_comment = comment_form.save(commit=False)
             user_comment.review = Review.objects.get(pk=pk)
-            user_comment.author = user_from_token(token)
+            user_comment.author = request.jwt_user
             user_comment.save()
 
             comment_form = NewCommentForm()
@@ -129,7 +111,6 @@ class ReviewDetailView(APIView):
                 'review': review,
                 'comments': review.comments.all(),
                 'comment_form': comment_form,
-                'user': user_from_token(token)
             }
             return render(request, 'books/review_detail.html', context)
 
@@ -139,23 +120,17 @@ class BookCreateView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
 
     def get(self, request, *args, **kwargs):
-        token = refresh_token_or_redirect(request)
-
-        if not isinstance(token, str):
-            return redirect('logout')
-
         response = Response(
             template_name='books/create_book.html', data={
                 "form": BookForm()
             }
         )
-        response.set_cookie('token', token)
         return response
 
     def post(self, request, *args, **kwargs):
         form_data = request.data
 
-        response = requests.post(
+        requests.post(
             PATH + 'books/api/',
             headers=self.headers,
             data=form_data,
@@ -168,15 +143,9 @@ class BookDeleteView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
 
     def get(self, request, pk, *args, **kwargs):
-        token = refresh_token_or_redirect(request)
-
-        if not isinstance(token, str):
-            return redirect('logout')
-
         response = Response(
             template_name='books/book_delete.html', data={
                 "book": Book.objects.get(pk=pk),
-                'user': user_from_token(token)
             }
         )
         return response
@@ -194,51 +163,73 @@ class ReviewCreateView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
 
     def get(self, request, *args, **kwargs):
-        token = refresh_token_or_redirect(request)
-
-        if not isinstance(token, str):
-            return redirect('logout')
 
         response = Response(
             template_name='books/review_create.html', data={
                 "form": ReviewForm(),
-                "user": user_from_token(token)
             }
         )
 
         return response
 
     def post(self, request, *args, **kwargs):
-        token = refresh_token_or_redirect(request)
 
         form_data = dict(request.data)
-        form_data.update({'user_id': user_from_token(token).pk, 'book_id': kwargs.get('pk')})
-        print(form_data)
-        response = requests.post(
+        form_data.update({'user_id': request.jwt_user.pk, 'book_id': kwargs.get('pk')})
+
+        requests.post(
             PATH + 'reviews/api/',
             headers=self.headers,
             data=form_data,
         )
+
         messages.success(request, 'Review created')
-        return redirect('books_main')
+        return redirect('book_detail', kwargs.get('pk'))
 
 
 class AuthorSearchView(ListView):
     model = Author
 
     def get(self, request, **kwargs):
-        token = refresh_token_or_redirect(request)
 
-        return render(request, 'books/search_authors.html', {'user': user_from_token(token)})
+        return render(request, 'books/search_authors.html', {'user': request.jwt_user})
 
     def post(self, request):
         search_string = json.loads(request.body).get('searchText')
         authors = Author.objects.filter(
             name__icontains=search_string
-            )
+        )
         data = list(authors.values())
         res_data = []
         for author in data:
             author.update({'link': f'../'})
             res_data.append(author)
         return JsonResponse(list(res_data), safe=False)
+
+
+def save_boooook(name):
+    Book.objects.create(name=str(name), author_id=1)
+    print(f'created {name}')
+
+
+class AddBooks(ListView):
+
+    def get(self, *args, **kwargs):
+        batch_size = 100
+        objs = (Book(name='Test %s' % i, author_id=1) for i in range(5000, 50000))
+        while True:
+            batch = list(islice(objs, batch_size))
+            if not batch:
+                break
+            b = Book.objects.bulk_create(batch, batch_size)
+            # print(b.name)
+
+        # names = [str(num) for num in range(1000, 2000)]
+        # pool = Pool(processes=5)  # Create a multiprocessing Pool
+        # pool.map(save_boooook, names)  # process data_inputs iterable with pool
+
+        # auth = Author.objects.create(name='name')
+        # for num in range(251, 1000):
+        #     Book.objects.create(name=str(num), author_id=1)
+        #     print(f'created {num}')
+        return JsonResponse({})

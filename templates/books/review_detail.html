@@ -30,7 +30,7 @@
                 <div>{{ node.content }}</div>
                 <hr/>
                 {% if node.level < 3 %}
-                    {% if user.is_authenticated %}
+                    {% if jwt_user.is_authenticated %}
 
                         <button class="button" onclick="myFunction({{ node.id }})">Reply</button>
                     {% endif %}
@@ -47,7 +47,7 @@
         {% endrecursetree %}
     </div>
 
-    {% if user.is_authenticated %}
+    {% if jwt_user.is_authenticated %}
         <div id="myDIV" style="display:block;">
             <form id="myForm" method="post">
                 <h2>Create new comment</h2>
